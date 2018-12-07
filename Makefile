@@ -1,7 +1,6 @@
 # C99 extensions are not necessary for OpenMP, but very convenient
 CC=gcc
 CFLAGS= -g -fopenmp -Wall -std=gnu11
-LDFLAGS= -fopenmp
 DEFINES=
 
 ifdef N
@@ -18,7 +17,7 @@ endif
 
 CFLAGS += $(DEFINES)
 
-%: %.c
+main: main.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean:

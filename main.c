@@ -22,8 +22,6 @@ double A[P_SQRT][P_SQRT][N_SUB][N_SUB];
 double B[P_SQRT][P_SQRT][N_SUB][N_SUB];
 double C[P_SQRT][P_SQRT][N_SUB][N_SUB];
 
-double myC[N_SUB][N_SUB];
-
 size_t indA[P_SQRT][P_SQRT][2];
 size_t indB[P_SQRT][P_SQRT][2];
 
@@ -110,13 +108,6 @@ int main()
         }
     }
 
-    // Init myC with zeroes
-    for (size_t i = 0; i < N_SUB; ++i) {
-        for (size_t j = 0; j < N_SUB; ++j) {
-            myC[i][j] = 0.0;
-        }
-    }
-
     double start_time = omp_get_wtime();
     #pragma omp parallel for collapse(2) firstprivate(indA, indB) num_threads(P)
     for (size_t i = 0; i < P_SQRT; ++i) {
@@ -144,15 +135,6 @@ int main()
                     indB[P_SQRT - 1][j1][0] = temp;
                 }
             }
-
-            /*
-            // Write myC to C[i][j]
-            for (size_t i1 = 0; i1 < N_SUB; ++i1) {
-                for (size_t j1 = 0; j1 < N_SUB; ++j1) {
-                    C[i][j][i1][j1] = myC[i1][j1];
-                }
-            }
-            */
         }
     }
     double el_time = omp_get_wtime() - start_time;

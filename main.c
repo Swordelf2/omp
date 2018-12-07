@@ -118,7 +118,7 @@ int main()
     }
 
     double start_time = omp_get_wtime();
-    #pragma omp parallel for collapse(2) firstprivate(indA, indB, myC) num_threads(P)
+    #pragma omp parallel for collapse(2) firstprivate(indA, indB) num_threads(P)
     for (size_t i = 0; i < P_SQRT; ++i) {
         for (size_t j = 0; j < P_SQRT; ++j) {
             // thread block
@@ -127,7 +127,7 @@ int main()
                 size_t Aj = indA[i][j][1];
                 size_t Bi = indB[i][j][0];
                 size_t Bj = indB[i][j][1];
-                multiply_matrices(A[Ai][Aj], B[Bi][Bj], myC);
+                multiply_matrices(A[Ai][Aj], B[Bi][Bj], C[i][j]);
                 // virtual shift by 1 (A left, B up)
                 for (size_t i1 = 0; i1 < P_SQRT; ++i1) {
                     size_t temp = indA[i1][0][1];
@@ -145,12 +145,14 @@ int main()
                 }
             }
 
+            /*
             // Write myC to C[i][j]
             for (size_t i1 = 0; i1 < N_SUB; ++i1) {
                 for (size_t j1 = 0; j1 < N_SUB; ++j1) {
                     C[i][j][i1][j1] = myC[i1][j1];
                 }
             }
+            */
         }
     }
     double el_time = omp_get_wtime() - start_time;

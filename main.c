@@ -5,7 +5,7 @@
 
 // Size of a matrix
 #ifndef N
-#define N 10000
+#define N 1000
 #endif
 
 #ifndef P_SQRT
@@ -76,10 +76,12 @@ print_matrix(double *A)
 
 int main()
 {
+    /*
     printf("P_SQRT = %d\n", P_SQRT);
     printf("P = %d\n", P);
     printf("N = %d\n", N);
     printf("N_SUB = %d\n", N_SUB);
+    */
 
     /* Initialization */
     // Can't parallel this (rand() is thread-safe => threads block each other)
@@ -115,7 +117,8 @@ int main()
         }
     }
 
-    #pragma omp parallel for firstprivate(indA, indB, myC) num_threads(P)
+    double start_time = omp_get_wtime();
+    #pragma omp parallel for collapse(2) firstprivate(indA, indB, myC) num_threads(P)
     for (size_t i = 0; i < P_SQRT; ++i) {
         for (size_t j = 0; j < P_SQRT; ++j) {
             // thread block
@@ -155,6 +158,8 @@ int main()
             }
         }
     }
+    double el_time = omp_get_wtime() - start_time;
+    printf("Time elapsed: %f\n", el_time);
 
 #ifdef TEST
     double *Aplain = malloc(N * N * sizeof(*Aplain));

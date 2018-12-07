@@ -31,7 +31,7 @@ size_t indB[P_SQRT][P_SQRT][2];
 #define RAND_ABS_MAX 2.0
 #endif
 
-// Returns a random value in [-RAND_ABS_MAX; abs_max] 
+// Returns a random value in [-RAND_ABS_MAX; RAND_ABS_MAX] 
 static inline double
 get_rand()
 {
@@ -115,10 +115,15 @@ int main()
         }
     }
 
-    #pragma omp parallel for firstprivate(indA, indB, myC) //num_threads(P)
+    #pragma omp parallel for firstprivate(indA, indB, myC) num_threads(P)
     for (size_t i = 0; i < P_SQRT; ++i) {
         for (size_t j = 0; j < P_SQRT; ++j) {
             // thread block
+            for (size_t i1 = 0; i1 < N_SUB; ++i1) {
+                for (size_t j1 = 0; j1 < N_SUB; ++j1) {
+                    myC[i1][j1] = 0.0;
+                }
+            }
             for (size_t k = 0; k < P_SQRT; ++k) {
                 size_t Ai = indA[i][j][0];
                 size_t Aj = indA[i][j][1];
@@ -143,17 +148,16 @@ int main()
             }
 
             // Write myC to C[i][j]
-            /*
             for (size_t i1 = 0; i1 < N_SUB; ++i1) {
                 for (size_t j1 = 0; j1 < N_SUB; ++j1) {
                     C[i][j][i1][j1] = myC[i1][j1];
                 }
             }
-            */
         }
     }
 
 #ifdef TEST
+    /*
     double *Aplain = malloc(N * N * sizeof(*Aplain));
     blocks_to_plain(A, Aplain);
     double *Bplain = malloc(N * N * sizeof(*Bplain));
@@ -161,6 +165,7 @@ int main()
     double *Cplain = malloc(N * N * sizeof(*Cplain));
     blocks_to_plain(C, Cplain);
     double *Ctest = malloc(N * N * sizeof(*Ctest));
+    */
 
     for (size_t i = 0; i < N; ++i) {
         for (size_t j = 0; j < N; ++j) {
@@ -188,7 +193,6 @@ int main()
         }
     }
 loop_break:
-    /*
     printf("Matrix A:\n");
     print_matrix(Aplain);
     printf("Matrix B:\n");
@@ -197,7 +201,6 @@ loop_break:
     print_matrix(Cplain);
     printf("Matrix Ctest:\n");
     print_matrix(Ctest);
-    */
 
     puts(equal ? "Matrices equal" : "Matrices are NOT equal");
 #endif

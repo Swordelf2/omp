@@ -122,11 +122,6 @@ int main()
     for (size_t i = 0; i < P_SQRT; ++i) {
         for (size_t j = 0; j < P_SQRT; ++j) {
             // thread block
-            for (size_t i1 = 0; i1 < N_SUB; ++i1) {
-                for (size_t j1 = 0; j1 < N_SUB; ++j1) {
-                    myC[i1][j1] = 0.0;
-                }
-            }
             for (size_t k = 0; k < P_SQRT; ++k) {
                 size_t Ai = indA[i][j][0];
                 size_t Aj = indA[i][j][1];

@@ -157,7 +157,6 @@ int main()
     }
 
 #ifdef TEST
-    /*
     double *Aplain = malloc(N * N * sizeof(*Aplain));
     blocks_to_plain(A, Aplain);
     double *Bplain = malloc(N * N * sizeof(*Bplain));
@@ -165,7 +164,6 @@ int main()
     double *Cplain = malloc(N * N * sizeof(*Cplain));
     blocks_to_plain(C, Cplain);
     double *Ctest = malloc(N * N * sizeof(*Ctest));
-    */
 
     for (size_t i = 0; i < N; ++i) {
         for (size_t j = 0; j < N; ++j) {
@@ -193,6 +191,7 @@ int main()
         }
     }
 loop_break:
+    /*
     printf("Matrix A:\n");
     print_matrix(Aplain);
     printf("Matrix B:\n");
@@ -201,6 +200,7 @@ loop_break:
     print_matrix(Cplain);
     printf("Matrix Ctest:\n");
     print_matrix(Ctest);
+    */
 
     puts(equal ? "Matrices equal" : "Matrices are NOT equal");
 #endif

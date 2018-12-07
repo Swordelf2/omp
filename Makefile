@@ -18,9 +18,6 @@ endif
 
 CFLAGS += $(DEFINES)
 
-test: test.cpp
-	g++ -fopenmp -Wall -std=gnu++17 -o $@ $<
-
 %: %.c
 	$(CC) $(CFLAGS) -o $@ $<
 

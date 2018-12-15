@@ -80,7 +80,7 @@ int main(int argc, char **argv)
     size_t P_SQRT;
     size_t N_SUB;
 
-    double *A, *B, *C, *Atemp, *Btemp;
+    double *A, *B, *C;
     double *Awhole, *Bwhole, *Cwhole;
     MPI_Status status;
     MPI_Init(&argc, &argv);
@@ -105,9 +105,7 @@ int main(int argc, char **argv)
     N_SUB = N / P_SQRT;
 
     A = malloc(N_SUB * N_SUB * sizeof(*A));
-    Atemp = malloc(N_SUB * N_SUB * sizeof(*Atemp));
     B = malloc(N_SUB * N_SUB * sizeof(*B));
-    Btemp = malloc(N_SUB * N_SUB * sizeof(*Btemp));
     C = malloc(N_SUB * N_SUB * sizeof(*C));
 
     if (procid == 0) {
@@ -197,17 +195,10 @@ int main(int argc, char **argv)
     }
     for (size_t l = 0; l < P_SQRT - 1; ++l) {
         multiply_matrices(A, B, C, N_SUB);
-        MPI_Send(A, subsize, MPI_DOUBLE, left, 0, MPI_COMM_WORLD);
-        MPI_Send(B, subsize, MPI_DOUBLE, up, 0, MPI_COMM_WORLD);
-        MPI_Recv(Atemp, subsize, MPI_DOUBLE, right, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(Btemp, subsize, MPI_DOUBLE, down, 0, MPI_COMM_WORLD, &status);
-        // swap matrices with their temporary counterparts
-        double *temp_ptr = A;
-        A = Atemp;
-        Atemp = temp_ptr;
-        temp_ptr = B;
-        B = Btemp;
-        Btemp = temp_ptr;
+        MPI_Sendrecv_replace(A, subsize, MPI_DOUBLE, left, 0,
+                right, 0, MPI_COMM_WORLD, &status);
+        MPI_Sendrecv_replace(B, subsize, MPI_DOUBLE, up, 0,
+                down, 0, MPI_COMM_WORLD, &status);
     }
     multiply_matrices(A, B, C, N_SUB);
 
@@ -313,9 +304,7 @@ loop_break:
         free(Cwhole);
     }
     free(A);
-    free(Atemp);
     free(B);
-    free(Btemp);
     free(C);
     
     MPI_Finalize();

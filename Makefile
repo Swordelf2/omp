@@ -1,14 +1,13 @@
-# C99 extensions are not necessary for OpenMP, but very convenient
-CC=gcc
-CFLAGS= -g -fopenmp -Wall -std=gnu11
+CC=mpicc
+CFLAGS= -g -Wall -std=gnu11
 DEFINES=
 
-ifdef N
-DEFINES+=-DN=$N
+ifndef P
+P=4
 endif
 
-ifdef P_SQRT
-DEFINES+=-DP_SQRT=$(P_SQRT)
+ifndef N
+N=2
 endif
 
 ifdef TEST
@@ -17,8 +16,11 @@ endif
 
 CFLAGS += $(DEFINES)
 
-main: main.c
-	$(CC) $(CFLAGS) -o $@ $<
+main: main_mpi.c
+	$(CC) $(CFLAGS) -o $@ $< -lm
+
+run: main
+	mpirun --oversubscribe -n $P ./main $N
 
 clean:
 	rm -f $(OBJS) main

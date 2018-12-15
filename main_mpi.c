@@ -80,7 +80,7 @@ int main(int argc, char **argv)
     size_t P_SQRT;
     size_t N_SUB;
 
-    double *A, *B, *C;
+    double *A, *B, *C, *Atemp, *Btemp;
     double *Awhole, *Bwhole, *Cwhole;
     MPI_Status status;
     MPI_Init(&argc, &argv);
@@ -105,7 +105,9 @@ int main(int argc, char **argv)
     N_SUB = N / P_SQRT;
 
     A = malloc(N_SUB * N_SUB * sizeof(*A));
+    Atemp = malloc(N_SUB * N_SUB * sizeof(*Atemp));
     B = malloc(N_SUB * N_SUB * sizeof(*B));
+    Btemp = malloc(N_SUB * N_SUB * sizeof(*Btemp));
     C = malloc(N_SUB * N_SUB * sizeof(*C));
 
     if (procid == 0) {
@@ -130,11 +132,11 @@ int main(int argc, char **argv)
                 Bwhole[i * N + j] = get_rand();
             }
         }
-        // Send submatrices to all other processes
+        // Send submatrices to other processes
         for (size_t i = 0; i < P_SQRT; ++i) {
             size_t j = i == 0 ? 1 : 0;
             for (; j < P_SQRT; ++j) {
-                size_t k = (i + j) % N;
+                size_t k = (i + j) % P_SQRT;
                 // send A[i][k] and B[k][j] to process (i, j)
                 MPI_Send(&Awhole[i * n1 + k * n2], subsize, MPI_DOUBLE,
                         i * P_SQRT + j, 0, MPI_COMM_WORLD);
@@ -166,7 +168,10 @@ int main(int argc, char **argv)
     fflush(stdout);
     */
 
+    /*                */
     /* Main algorithm */
+    /*                */
+
     double start_time;
     if (procid == 0) {
         start_time = MPI_Wtime();
@@ -192,26 +197,39 @@ int main(int argc, char **argv)
     }
     for (size_t l = 0; l < P_SQRT - 1; ++l) {
         multiply_matrices(A, B, C, N_SUB);
-        MPI_Send(A, subsize, MPI_DOUBLE, up, 0, MPI_COMM_WORLD);
-        MPI_Send(B, subsize, MPI_DOUBLE, left, 0, MPI_COMM_WORLD);
-        MPI_Recv(A, subsize, MPI_DOUBLE, down, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(B, subsize, MPI_DOUBLE, right, 0, MPI_COMM_WORLD, &status);
+        MPI_Send(A, subsize, MPI_DOUBLE, left, 0, MPI_COMM_WORLD);
+        MPI_Send(B, subsize, MPI_DOUBLE, up, 0, MPI_COMM_WORLD);
+        MPI_Recv(Atemp, subsize, MPI_DOUBLE, right, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(Btemp, subsize, MPI_DOUBLE, down, 0, MPI_COMM_WORLD, &status);
+        // swap matrices with their temporary counterparts
+        double *temp_ptr = A;
+        A = Atemp;
+        Atemp = temp_ptr;
+        temp_ptr = B;
+        B = Btemp;
+        Btemp = temp_ptr;
     }
     multiply_matrices(A, B, C, N_SUB);
 
     /* Debugging code */
     if (procid == 0) {
-        printf("Intermidiate time elapsed: %f\n", MPI_Wtime() - start_time);
+        printf("Intermediate time elapsed: %f\n", MPI_Wtime() - start_time);
         fflush(stdout);
     }
 
     // Receive results from all processes
     if (procid == 0) {
-        for (size_t i = 0; i < P_SQRT - 1; ++i) {
+        for (size_t i = 0; i < P_SQRT; ++i) {
             size_t j = i == 0 ? 1 : 0;
             for (; j < P_SQRT; ++j) {
-                MPI_Recv(&C[i * n1 + j * n2], subsize, MPI_DOUBLE,
+                MPI_Recv(&Cwhole[i * n1 + j * n2], subsize, MPI_DOUBLE,
                         i * P_SQRT + j, 0, MPI_COMM_WORLD, &status);
+            }
+        }
+        // receive my own submatrix
+        for (size_t i = 0; i < N_SUB; ++i) {
+            for (size_t j = 0; j < N_SUB; ++j) {
+                Cwhole[i * N_SUB + j] = C[i * N_SUB + j];
             }
         }
     } else {
@@ -268,20 +286,37 @@ int main(int argc, char **argv)
             }
         }
 loop_break:
+        /* Debugging code
         printf("Matrix A:\n");
-        print_matrix(Aplain);
+        print_matrix(Aplain, N);
         printf("Matrix B:\n");
-        print_matrix(Bplain);
+        print_matrix(Bplain, N);
         printf("Matrix C:\n");
-        print_matrix(Cplain);
+        print_matrix(Cplain, N);
         printf("Matrix Ctest:\n");
-        print_matrix(Ctest);
+        print_matrix(Ctest, N);
+        */
 
         puts(equal ? "Matrices equal" : "Matrices are NOT equal");
         fflush(stdout);
 
+        free(Aplain);
+        free(Bplain);
+        free(Cplain);
+        free(Ctest);
     }
 #endif
+
+    if (procid == 0) {
+        free(Awhole);
+        free(Bwhole);
+        free(Cwhole);
+    }
+    free(A);
+    free(Atemp);
+    free(B);
+    free(Btemp);
+    free(C);
     
     MPI_Finalize();
 

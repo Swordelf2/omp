@@ -17,8 +17,8 @@ endif
 
 CFLAGS += $(DEFINES)
 
-main: main.c
-	$(CC) $(CFLAGS) -o $@ $<
+main: clean main.c
+	$(CC) $(CFLAGS) -o $@ main.c
 
 clean:
 	rm -f $(OBJS) main

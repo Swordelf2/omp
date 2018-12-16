@@ -35,7 +35,7 @@ multiply_matrices(double *A, double *B, double *C, size_t N)
 }
 
 #ifdef TEST
-// convers from Awhole[P_SQRT][P_SQRT][N_SUB][N_SUB] to Aplain[N][N]
+// converts from Awhole[P_SQRT][P_SQRT][N_SUB][N_SUB] to Aplain[N][N]
 void
 blocks_to_plain(double *Awhole, double *Aplain, size_t N, size_t N_SUB, size_t P_SQRT)
 {
@@ -69,6 +69,11 @@ enum Args
 
 int main(int argc, char **argv)
 {
+    /* TODO
+     * consider using MPI_Scatter and MPI_Gather
+     * also Carts are an option
+     */
+
     setvbuf(stdout, NULL, _IOFBF, 0);
 
     /* Initialization */
